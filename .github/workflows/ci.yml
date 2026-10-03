@@ -1,0 +1,65 @@
+name: Tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      native:
+        description: Run native gates on a pre-provisioned KiCad 9 Linux runner
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e '.[dev]' 'dcc-mcp-core==0.20.41' 'dcc-mcp-server==0.20.41'
+      - run: ruff check . && ruff format --check .
+      - run: python -m pytest -m 'not native and not mcp'
+      - run: python scripts/validate_skill.py
+      - run: python -m build
+      - name: Verify installed wheel outside the source tree
+        run: |
+          python -m pip install --force-reinstall --no-deps dist/*.whl
+          python scripts/validate_skill.py
+          cp tests/conftest.py tests/test_contract.py tests/test_runtime.py tests/test_hardening.py tests/test_cli.py "$RUNNER_TEMP/"
+          cd "$RUNNER_TEMP"
+          python -m pytest -c /dev/null -m 'not native and not mcp' test_contract.py test_runtime.py test_hardening.py test_cli.py
+  native-wheel:
+    if: github.event_name == 'workflow_dispatch' && inputs.native
+    runs-on: [self-hosted, linux, kicad-9]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and install into isolated matching Python environment
+        run: |
+          /usr/bin/python3 -m venv --system-site-packages "$RUNNER_TEMP/kicad-acceptance"
+          "$RUNNER_TEMP/kicad-acceptance/bin/python" -m pip install build
+          "$RUNNER_TEMP/kicad-acceptance/bin/python" -m build
+          "$RUNNER_TEMP/kicad-acceptance/bin/python" -m pip install dist/*.whl 'dcc-mcp-core==0.20.41' 'dcc-mcp-server==0.20.41' 'mcp==1.30.0' pytest jsonschema PyYAML
+      - name: Installed wheel native and official SDK gates
+        run: |
+          PYTHON="$RUNNER_TEMP/kicad-acceptance/bin/python"
+          cp tests/conftest.py tests/test_contract.py tests/test_runtime.py tests/test_hardening.py tests/test_cli.py tests/test_mcp_cancellation.py scripts/native_acceptance.py scripts/sdk_acceptance.py scripts/validate_skill.py "$RUNNER_TEMP/"
+          cd "$RUNNER_TEMP"
+          "$PYTHON" -c 'import dcc_mcp_kicad; assert "site-packages" in dcc_mcp_kicad.__file__'
+          "$PYTHON" validate_skill.py
+          "$PYTHON" -m pytest -c /dev/null test_contract.py test_runtime.py test_hardening.py test_cli.py test_mcp_cancellation.py --junitxml=kicad-native-tests.xml
+          "$PYTHON" native_acceptance.py kicad-http-evidence
+          "$PYTHON" sdk_acceptance.py kicad-sdk-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kicad-native-evidence
+          path: |
+            ${{ runner.temp }}/kicad-native-tests.xml
+            ${{ runner.temp }}/kicad-http-evidence/
+            ${{ runner.temp }}/kicad-sdk-evidence/
