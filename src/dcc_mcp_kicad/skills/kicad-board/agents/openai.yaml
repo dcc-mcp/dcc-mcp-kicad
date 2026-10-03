@@ -1,0 +1,10 @@
+interface:
+  display_name: "KiCad Board Files"
+  short_description: "Typed headless KiCad 9 PCB operations"
+  default_prompt: >-
+    Inspect status, then use typed board operations within the configured workspace.
+    Start asynchronous operations once and follow the same Core job ID through
+    jobs_get_status to a terminal result. After a timeout, query that job before
+    retrying; do not relaunch blindly. Inspect current board state after uncertainty.
+    The service is separate from PCB Editor. Synthetic templates and DRC reports
+    do not establish electrical validation or manufacturing readiness.

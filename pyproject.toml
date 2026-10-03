@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dcc-mcp-kicad"
+version = "0.1.0"
+description = "Typed, workspace-scoped KiCad pcbnew headless board adapter for DCC-MCP"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = ["dcc-mcp-core==0.20.41", "dcc-mcp-server==0.20.41"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.12", "build>=1.2", "PyYAML>=6", "jsonschema>=4.18", "mcp>=1.20,<2"]
+
+[project.scripts]
+dcc-mcp-kicad = "dcc_mcp_kicad.server:main"
+
+[project.entry-points."dcc_mcp.adapters"]
+kicad = "dcc_mcp_kicad:KicadMcpServer"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dcc_mcp_kicad"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = ["native: requires pcbnew and kicad-cli", "mcp: real Core HTTP MCP acceptance"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]

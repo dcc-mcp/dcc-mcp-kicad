@@ -1,0 +1,1217 @@
+tools:
+- name: status
+  description: Inspect native host version, runtime mode, workspace, lane identity and board state.
+  source_file: scripts/status.py
+  input_schema:
+    type: object
+    properties: {}
+    additionalProperties: false
+  output_schema:
+    type: object
+    properties:
+      success: &id005
+        type: boolean
+      message: &id006
+        type: string
+      error: &id001
+        type:
+        - string
+        - 'null'
+      prompt: *id001
+      context:
+        type: object
+        properties:
+          host_version: &id002
+            type: string
+          runtime: *id002
+          workspace: *id002
+          board_loaded: &id003
+            type: boolean
+          dirty: *id003
+          cli_available: *id003
+          cli_version:
+            type:
+            - string
+            - 'null'
+          cli_compatible: *id003
+          python_version: *id002
+          revision:
+            type: integer
+            minimum: 0
+            description: Current in-memory board revision; echo as expected_revision to reject stale work
+          host_thread_id: &id004
+            type: integer
+            minimum: 0
+          process_id: *id004
+          live_editor_connection: *id003
+        additionalProperties: false
+        required: []
+      postcondition: &id011
+        type: object
+        properties:
+          verified: *id005
+          method: *id006
+          operation: *id006
+        additionalProperties: false
+        required:
+        - verified
+      _meta:
+        type: object
+    additionalProperties: false
+    required:
+    - success
+    - message
+    - error
+    - prompt
+    - context
+    allOf:
+    - if:
+        properties:
+          success:
+            const: true
+      then:
+        properties:
+          context:
+            type: object
+            properties:
+              host_version: *id006
+              runtime: *id006
+              workspace: *id006
+              board_loaded: *id005
+              dirty: *id005
+              cli_available: *id005
+              cli_version: *id001
+              cli_compatible: *id005
+              python_version: *id006
+              revision: &id012
+                type: integer
+                minimum: 0
+                description: Current in-memory board revision; echo as expected_revision to reject stale work
+              host_thread_id: &id007
+                type: integer
+                minimum: 0
+              process_id: *id007
+              live_editor_connection: *id005
+            additionalProperties: false
+            required:
+            - host_version
+            - runtime
+            - workspace
+            - board_loaded
+            - dirty
+            - cli_available
+            - cli_version
+            - cli_compatible
+            - python_version
+            - revision
+            - host_thread_id
+            - process_id
+            - live_editor_connection
+          error:
+            type: 'null'
+      else:
+        properties:
+          error: *id006
+  execution: sync
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 30
+  annotations:
+    read_only_hint: true
+    destructive_hint: false
+    idempotent_hint: true
+    open_world_hint: false
+    deferred_hint: false
+- name: create_board
+  description: Create a synthetic rectangular two-test-point board with one connecting track.
+  source_file: scripts/create_board.py
+  input_schema:
+    type: object
+    properties:
+      width_mm:
+        type: number
+        minimum: 20
+        maximum: 200
+        default: 60
+      height_mm:
+        type: number
+        minimum: 20
+        maximum: 200
+        default: 40
+      track_width_mm:
+        type: number
+        minimum: 0.1
+        maximum: 3
+        default: 0.8
+      discard_unsaved:
+        type: boolean
+        default: false
+      expected_revision:
+        type: integer
+        minimum: 0
+        description: Current in-memory board revision; echo as expected_revision to reject stale work
+    additionalProperties: false
+  output_schema:
+    type: object
+    properties:
+      success: *id005
+      message: *id006
+      error: *id001
+      prompt: *id001
+      context:
+        type: object
+        properties:
+          counts:
+            type: object
+            properties:
+              footprints: &id008
+                type: integer
+                minimum: 0
+              tracks: *id008
+              drawings: *id008
+            additionalProperties: false
+            required:
+            - footprints
+            - tracks
+            - drawings
+          tracks:
+            type: array
+            items:
+              type: object
+              properties:
+                uuid: &id009
+                  type: string
+                width_mm:
+                  type: number
+                net: *id009
+              additionalProperties: false
+              required:
+              - uuid
+              - width_mm
+              - net
+            maxItems: 1000
+          footprints:
+            type: array
+            items: *id009
+            maxItems: 1000
+          truncated: &id010
+            type: boolean
+          path:
+            type:
+            - string
+            - 'null'
+          dirty: *id010
+          revision:
+            type: integer
+            minimum: 0
+            description: Current in-memory board revision; echo as expected_revision to reject stale work
+        additionalProperties: false
+        required: []
+      postcondition: *id011
+      _meta:
+        type: object
+    additionalProperties: false
+    required:
+    - success
+    - message
+    - error
+    - prompt
+    - context
+    allOf:
+    - if:
+        properties:
+          success:
+            const: true
+      then:
+        properties:
+          context: &id016
+            type: object
+            properties:
+              counts: &id036
+                type: object
+                properties:
+                  footprints: *id007
+                  tracks: *id007
+                  drawings: *id007
+                additionalProperties: false
+                required:
+                - footprints
+                - tracks
+                - drawings
+              tracks: &id037
+                type: array
+                items:
+                  type: object
+                  properties:
+                    uuid: *id006
+                    width_mm: &id018
+                      type: number
+                    net: *id006
+                  additionalProperties: false
+                  required:
+                  - uuid
+                  - width_mm
+                  - net
+                maxItems: 1000
+              footprints: &id038
+                type: array
+                items: *id006
+                maxItems: 1000
+              truncated: *id005
+              path: *id001
+              dirty: *id005
+              revision: *id012
+            additionalProperties: false
+            required:
+            - counts
+            - tracks
+            - footprints
+            - truncated
+            - path
+            - dirty
+            - revision
+          error:
+            type: 'null'
+      else:
+        properties:
+          error: *id006
+  execution: sync
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 30
+  annotations: &id039
+    read_only_hint: false
+    destructive_hint: true
+    idempotent_hint: false
+    open_world_hint: false
+    deferred_hint: false
+  next-tools: &id040
+    on-failure:
+    - status
+    - inspect_board
+- name: inspect_board
+  description: Inspect the current board counts, track UUIDs and widths, and dirty state.
+  source_file: scripts/inspect_board.py
+  input_schema:
+    type: object
+    properties: {}
+    additionalProperties: false
+  output_schema:
+    type: object
+    properties:
+      success: *id005
+      message: *id006
+      error: *id001
+      prompt: *id001
+      context:
+        type: object
+        properties:
+          counts:
+            type: object
+            properties:
+              footprints: &id013
+                type: integer
+                minimum: 0
+              tracks: *id013
+              drawings: *id013
+            additionalProperties: false
+            required:
+            - footprints
+            - tracks
+            - drawings
+          tracks:
+            type: array
+            items:
+              type: object
+              properties:
+                uuid: &id014
+                  type: string
+                width_mm:
+                  type: number
+                net: *id014
+              additionalProperties: false
+              required:
+              - uuid
+              - width_mm
+              - net
+            maxItems: 1000
+          footprints:
+            type: array
+            items: *id014
+            maxItems: 1000
+          truncated: &id015
+            type: boolean
+          path:
+            type:
+            - string
+            - 'null'
+          dirty: *id015
+          revision:
+            type: integer
+            minimum: 0
+            description: Current in-memory board revision; echo as expected_revision to reject stale work
+        additionalProperties: false
+        required: []
+      postcondition: *id011
+      _meta:
+        type: object
+    additionalProperties: false
+    required:
+    - success
+    - message
+    - error
+    - prompt
+    - context
+    allOf:
+    - if:
+        properties:
+          success:
+            const: true
+      then:
+        properties:
+          context: *id016
+          error:
+            type: 'null'
+      else:
+        properties:
+          error: *id006
+  execution: sync
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 30
+  annotations:
+    read_only_hint: true
+    destructive_hint: false
+    idempotent_hint: true
+    open_world_hint: false
+    deferred_hint: false
+- name: set_track_width
+  description: Set one straight track width and verify native readback.
+  source_file: scripts/set_track_width.py
+  input_schema:
+    type: object
+    properties:
+      track_uuid:
+        type: string
+        minLength: 36
+        description: UUID from inspect_board
+        maxLength: 36
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      width_mm:
+        type: number
+        minimum: 0.1
+        maximum: 3
+        default: 1.2
+      expected_revision:
+        type: integer
+        minimum: 0
+        description: Current in-memory board revision; echo as expected_revision to reject stale work
+    additionalProperties: false
+    required:
+    - track_uuid
+    - width_mm
+  output_schema:
+    type: object
+    properties:
+      success: *id005
+      message: *id006
+      error: *id001
+      prompt: *id001
+      context:
+        type: object
+        properties:
+          track_uuid:
+            type: string
+          previous_width_mm: &id017
+            type: number
+          width_mm: *id017
+          dirty:
+            type: boolean
+          revision:
+            type: integer
+            minimum: 0
+            description: Current in-memory board revision; echo as expected_revision to reject stale work
+        additionalProperties: false
+        required: []
+      postcondition: *id011
+      _meta:
+        type: object
+    additionalProperties: false
+    required:
+    - success
+    - message
+    - error
+    - prompt
+    - context
+    allOf:
+    - if:
+        properties:
+          success:
+            const: true
+      then:
+        properties:
+          context:
+            type: object
+            properties:
+              track_uuid: *id006
+              previous_width_mm: *id018
+              width_mm: *id018
+              dirty: *id005
+              revision: *id012
+            additionalProperties: false
+            required:
+            - track_uuid
+            - previous_width_mm
+            - width_mm
+            - dirty
+            - revision
+          error:
+            type: 'null'
+      else:
+        properties:
+          error: *id006
+  execution: sync
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 30
+  annotations:
+    read_only_hint: false
+    destructive_hint: true
+    idempotent_hint: false
+    open_world_hint: false
+    deferred_hint: false
+  next-tools:
+    on-failure:
+    - status
+    - inspect_board
+- name: save_board
+  description: Save the current board and verify it by native reopening.
+  source_file: scripts/save_board.py
+  input_schema:
+    type: object
+    properties:
+      path: &id023
+        type: string
+        minLength: 1
+        description: Path inside the configured workspace
+        maxLength: 4096
+      overwrite:
+        type: boolean
+        default: false
+      expected_revision:
+        type: integer
+        minimum: 0
+        description: Current in-memory board revision; echo as expected_revision to reject stale work
+    additionalProperties: false
+    required:
+    - path
+  output_schema:
+    type: object
+    anyOf:
+    - type: object
+      properties:
+        success: *id005
+        message: *id006
+        error: *id001
+        prompt: *id001
+        context:
+          type: object
+          properties:
+            path: &id020
+              type: string
+            bytes: &id019
+              type: integer
+              minimum: 0
+            sha256:
+              type: string
+              pattern: ^[0-9a-f]{64}$
+            revision: &id022
+              type: integer
+              minimum: 0
+              description: Current in-memory board revision; echo as expected_revision to reject stale work
+            board:
+              type: object
+              properties:
+                counts:
+                  type: object
+                  properties:
+                    footprints: *id019
+                    tracks: *id019
+                    drawings: *id019
+                  additionalProperties: false
+                  required:
+                  - footprints
+                  - tracks
+                  - drawings
+                tracks:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      uuid: *id020
+                      width_mm:
+                        type: number
+                      net: *id020
+                    additionalProperties: false
+                    required:
+                    - uuid
+                    - width_mm
+                    - net
+                  maxItems: 1000
+                footprints:
+                  type: array
+                  items: *id020
+                  maxItems: 1000
+                truncated: &id021
+                  type: boolean
+                path:
+                  type:
+                  - string
+                  - 'null'
+                dirty: *id021
+                revision: *id022
+              additionalProperties: false
+              required:
+              - counts
+              - tracks
+              - footprints
+              - truncated
+              - path
+              - dirty
+              - revision
+            reopened: *id021
+          additionalProperties: false
+          required: []
+        postcondition: *id011
+        _meta:
+          type: object
+      additionalProperties: false
+      required:
+      - success
+      - message
+      - error
+      - prompt
+      - context
+      allOf:
+      - if:
+          properties:
+            success:
+              const: true
+        then:
+          properties:
+            context:
+              type: object
+              properties:
+                path: *id006
+                bytes: *id007
+                sha256: &id029
+                  type: string
+                  pattern: ^[0-9a-f]{64}$
+                revision: *id012
+                board: *id016
+                reopened: *id005
+              additionalProperties: false
+              required:
+              - path
+              - bytes
+              - sha256
+              - revision
+              - board
+              - reopened
+            error:
+              type: 'null'
+        else:
+          properties:
+            error: *id006
+    - &id027
+      type: object
+      properties:
+        job_id: *id006
+        core_job_id: *id006
+        job_id_owner:
+          const: core
+        status:
+          enum:
+          - pending
+          - running
+          - completed
+          - failed
+          - cancelled
+          - interrupted
+        parent_job_id: *id001
+        core_poll:
+          type: object
+          properties:
+            owner:
+              const: core
+            tool:
+              const: jobs_get_status
+            arguments:
+              type: object
+              properties:
+                job_id: *id006
+                include_result: *id005
+              additionalProperties: false
+              required:
+              - job_id
+              - include_result
+          additionalProperties: false
+          required:
+          - owner
+          - tool
+          - arguments
+        _meta:
+          type: object
+      additionalProperties: false
+      required:
+      - job_id
+      - core_job_id
+      - job_id_owner
+      - status
+      - core_poll
+  execution: async
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 150
+  annotations:
+    read_only_hint: false
+    destructive_hint: true
+    idempotent_hint: false
+    open_world_hint: false
+    deferred_hint: true
+  job_strategy: monolithic
+  next-tools:
+    on-failure:
+    - status
+    - inspect_board
+- name: open_board
+  description: Open a KiCad PCB file into the isolated headless session.
+  source_file: scripts/open_board.py
+  input_schema:
+    type: object
+    properties:
+      path: *id023
+      discard_unsaved:
+        type: boolean
+        default: false
+      expected_revision:
+        type: integer
+        minimum: 0
+        description: Current in-memory board revision; echo as expected_revision to reject stale work
+    additionalProperties: false
+    required:
+    - path
+  output_schema:
+    type: object
+    anyOf:
+    - type: object
+      properties:
+        success: *id005
+        message: *id006
+        error: *id001
+        prompt: *id001
+        context:
+          type: object
+          properties:
+            counts:
+              type: object
+              properties:
+                footprints: &id024
+                  type: integer
+                  minimum: 0
+                tracks: *id024
+                drawings: *id024
+              additionalProperties: false
+              required:
+              - footprints
+              - tracks
+              - drawings
+            tracks:
+              type: array
+              items:
+                type: object
+                properties:
+                  uuid: &id025
+                    type: string
+                  width_mm:
+                    type: number
+                  net: *id025
+                additionalProperties: false
+                required:
+                - uuid
+                - width_mm
+                - net
+              maxItems: 1000
+            footprints:
+              type: array
+              items: *id025
+              maxItems: 1000
+            truncated: &id026
+              type: boolean
+            path:
+              type:
+              - string
+              - 'null'
+            dirty: *id026
+            revision:
+              type: integer
+              minimum: 0
+              description: Current in-memory board revision; echo as expected_revision to reject stale work
+          additionalProperties: false
+          required: []
+        postcondition: *id011
+        _meta:
+          type: object
+      additionalProperties: false
+      required:
+      - success
+      - message
+      - error
+      - prompt
+      - context
+      allOf:
+      - if:
+          properties:
+            success:
+              const: true
+        then:
+          properties:
+            context: *id016
+            error:
+              type: 'null'
+        else:
+          properties:
+            error: *id006
+    - *id027
+  execution: async
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 150
+  annotations:
+    read_only_hint: false
+    destructive_hint: true
+    idempotent_hint: false
+    open_world_hint: false
+    deferred_hint: true
+  job_strategy: monolithic
+  next-tools:
+    on-failure:
+    - status
+    - inspect_board
+- name: export_svg
+  description: Export an SVG of the current board snapshot with front copper, silkscreen and outline.
+  source_file: scripts/export_svg.py
+  input_schema:
+    type: object
+    properties:
+      output_path: *id023
+      overwrite:
+        type: boolean
+        default: false
+      timeout_secs:
+        type: number
+        minimum: 1
+        maximum: 120
+        default: 60
+      expected_revision:
+        type: integer
+        minimum: 0
+        description: Current in-memory board revision; echo as expected_revision to reject stale work
+    additionalProperties: false
+    required:
+    - output_path
+  output_schema:
+    type: object
+    anyOf:
+    - type: object
+      properties:
+        success: *id005
+        message: *id006
+        error: *id001
+        prompt: *id001
+        context:
+          type: object
+          properties:
+            path:
+              type: string
+            bytes: &id028
+              type: integer
+              minimum: 0
+            sha256:
+              type: string
+              pattern: ^[0-9a-f]{64}$
+            revision:
+              type: integer
+              minimum: 0
+              description: Current in-memory board revision; echo as expected_revision to reject stale work
+            format:
+              const: svg
+            elements: *id028
+          additionalProperties: false
+          required: []
+        postcondition: *id011
+        _meta:
+          type: object
+      additionalProperties: false
+      required:
+      - success
+      - message
+      - error
+      - prompt
+      - context
+      allOf:
+      - if:
+          properties:
+            success:
+              const: true
+        then:
+          properties:
+            context:
+              type: object
+              properties:
+                path: *id006
+                bytes: *id007
+                sha256: *id029
+                revision: *id012
+                format:
+                  const: svg
+                elements: *id007
+              additionalProperties: false
+              required:
+              - path
+              - bytes
+              - sha256
+              - revision
+              - format
+              - elements
+            error:
+              type: 'null'
+        else:
+          properties:
+            error: *id006
+    - *id027
+  execution: async
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 150
+  annotations:
+    read_only_hint: false
+    destructive_hint: true
+    idempotent_hint: false
+    open_world_hint: false
+    deferred_hint: true
+  job_strategy: monolithic
+  next-tools:
+    on-failure:
+    - status
+    - inspect_board
+- name: run_drc
+  description: Run KiCad CLI DRC on the current snapshot and save a JSON diagnostic report.
+  source_file: scripts/run_drc.py
+  input_schema:
+    type: object
+    properties:
+      output_path: *id023
+      overwrite:
+        type: boolean
+        default: false
+      timeout_secs:
+        type: number
+        minimum: 1
+        maximum: 120
+        default: 60
+      expected_revision:
+        type: integer
+        minimum: 0
+        description: Current in-memory board revision; echo as expected_revision to reject stale work
+    additionalProperties: false
+    required:
+    - output_path
+  output_schema:
+    type: object
+    anyOf:
+    - type: object
+      properties:
+        success: *id005
+        message: *id006
+        error: *id001
+        prompt: *id001
+        context:
+          type: object
+          properties:
+            path: &id031
+              type: string
+            bytes: &id030
+              type: integer
+              minimum: 0
+            sha256:
+              type: string
+              pattern: ^[0-9a-f]{64}$
+            revision:
+              type: integer
+              minimum: 0
+              description: Current in-memory board revision; echo as expected_revision to reject stale work
+            format:
+              const: json
+            counts:
+              type: object
+              properties:
+                violations: *id030
+                unconnected_items: *id030
+                schematic_parity: *id030
+              additionalProperties: false
+              required:
+              - violations
+              - unconnected_items
+              - schematic_parity
+            certification:
+              type: boolean
+            scope: *id031
+          additionalProperties: false
+          required: []
+        postcondition: *id011
+        _meta:
+          type: object
+      additionalProperties: false
+      required:
+      - success
+      - message
+      - error
+      - prompt
+      - context
+      allOf:
+      - if:
+          properties:
+            success:
+              const: true
+        then:
+          properties:
+            context:
+              type: object
+              properties:
+                path: *id006
+                bytes: *id007
+                sha256: *id029
+                revision: *id012
+                format:
+                  const: json
+                counts:
+                  type: object
+                  properties:
+                    violations: *id007
+                    unconnected_items: *id007
+                    schematic_parity: *id007
+                  additionalProperties: false
+                  required:
+                  - violations
+                  - unconnected_items
+                  - schematic_parity
+                certification: *id005
+                scope: *id006
+              additionalProperties: false
+              required:
+              - path
+              - bytes
+              - sha256
+              - revision
+              - format
+              - counts
+              - certification
+              - scope
+            error:
+              type: 'null'
+        else:
+          properties:
+            error: *id006
+    - *id027
+  execution: async
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 150
+  annotations:
+    read_only_hint: false
+    destructive_hint: true
+    idempotent_hint: false
+    open_world_hint: false
+    deferred_hint: true
+  job_strategy: monolithic
+  next-tools:
+    on-failure:
+    - status
+    - inspect_board
+- name: create_sensor_carrier
+  description: Create a bounded sensor-carrier concept with 4 mounting holes, 7 synthetic component footprints,
+    nets, partial routes and silkscreen. Not electrically validated.
+  source_file: scripts/create_sensor_carrier.py
+  input_schema:
+    type: object
+    properties:
+      width_mm:
+        type: number
+        minimum: 70
+        maximum: 100
+        default: 80
+      height_mm:
+        type: number
+        minimum: 45
+        maximum: 70
+        default: 50
+      label:
+        type: string
+        minLength: 1
+        maxLength: 32
+        default: AERIS SENSOR CARRIER
+        pattern: ^[ -~]{1,32}$
+      discard_unsaved:
+        type: boolean
+        default: false
+      expected_revision:
+        type: integer
+        minimum: 0
+        description: Current in-memory board revision; echo as expected_revision to reject stale work
+    additionalProperties: false
+  output_schema:
+    type: object
+    properties:
+      success: *id005
+      message: *id006
+      error: *id001
+      prompt: *id001
+      context:
+        type: object
+        properties:
+          counts:
+            type: object
+            properties:
+              footprints: &id032
+                type: integer
+                minimum: 0
+              tracks: *id032
+              drawings: *id032
+            additionalProperties: false
+            required:
+            - footprints
+            - tracks
+            - drawings
+          tracks:
+            type: array
+            items:
+              type: object
+              properties:
+                uuid: &id033
+                  type: string
+                width_mm: &id035
+                  type: number
+                net: *id033
+              additionalProperties: false
+              required:
+              - uuid
+              - width_mm
+              - net
+            maxItems: 1000
+          footprints:
+            type: array
+            items: *id033
+            maxItems: 1000
+          truncated: &id034
+            type: boolean
+          path:
+            type:
+            - string
+            - 'null'
+          dirty: *id034
+          revision:
+            type: integer
+            minimum: 0
+            description: Current in-memory board revision; echo as expected_revision to reject stale work
+          template: *id033
+          dimensions_mm:
+            type: array
+            items: *id035
+            maxItems: 2
+          net_names:
+            type: array
+            items: *id033
+            maxItems: 5
+          electrically_validated: *id034
+          limitations:
+            type: array
+            items: *id033
+            maxItems: 3
+        additionalProperties: false
+        required: []
+      postcondition: *id011
+      _meta:
+        type: object
+    additionalProperties: false
+    required:
+    - success
+    - message
+    - error
+    - prompt
+    - context
+    allOf:
+    - if:
+        properties:
+          success:
+            const: true
+      then:
+        properties:
+          context:
+            type: object
+            properties:
+              counts: *id036
+              tracks: *id037
+              footprints: *id038
+              truncated: *id005
+              path: *id001
+              dirty: *id005
+              revision: *id012
+              template: *id006
+              dimensions_mm:
+                type: array
+                items: *id018
+                maxItems: 2
+              net_names:
+                type: array
+                items: *id006
+                maxItems: 5
+              electrically_validated: *id005
+              limitations:
+                type: array
+                items: *id006
+                maxItems: 3
+            additionalProperties: false
+            required:
+            - counts
+            - tracks
+            - footprints
+            - truncated
+            - path
+            - dirty
+            - revision
+            - template
+            - dimensions_mm
+            - net_names
+            - electrically_validated
+            - limitations
+          error:
+            type: 'null'
+      else:
+        properties:
+          error: *id006
+  execution: sync
+  affinity: main
+  enforce_thread_affinity: true
+  requires_in_process: true
+  timeout_hint_secs: 30
+  annotations: *id039
+  next-tools: *id040
