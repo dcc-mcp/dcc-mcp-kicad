@@ -451,13 +451,22 @@ class BoardRuntime:
             raise BoardError("track_not_found", "Expected the UUID of one straight PCB track, not a via")
         item = matches[0]
         old = self.pcb.ToMM(item.GetWidth())
+        native_width = self.pcb.FromMM(width)
         check_cancelled()
-        item.SetWidth(self.pcb.FromMM(width))
+        try:
+            item.SetWidth(native_width)
+        finally:
+            # A native setter can mutate before raising; require reinspection either way.
+            self.dirty = True
+            self.revision += 1
         actual = self.pcb.ToMM(item.GetWidth())
-        self.dirty = True
-        if abs(actual - width) > 1e-6:
+        if (
+            isinstance(actual, bool)
+            or not isinstance(actual, (int, float))
+            or not math.isfinite(actual)
+            or abs(actual - width) > 1e-6
+        ):
             raise BoardError("verification_failed", "Native track width readback did not match")
-        self.revision += 1
         return {
             "track_uuid": track_uuid,
             "previous_width_mm": old,

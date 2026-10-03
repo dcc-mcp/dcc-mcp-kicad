@@ -12,8 +12,11 @@ and Python 3.10 or later. KiCad 9.0.2, Linux, Python 3.13.5 and Core 0.20.39 wer
 used for the native acceptance run. Other operating systems and KiCad builds are
 not yet host-qualified. KiCad 10 and Python 3.7 are outside the declared profile.
 That acceptance belongs to the previous runtime. The current 0.20.41 candidate
-needs separate native and real MCP acceptance; follow the [runtime upgrade and
-rollback record](docs/RUNTIME_UPGRADE_0_20_41.md) before adopting it.
+has separate Linux source, installed-wheel, SDK and native HTTP acceptance for
+the exact reviewed commit recorded in the [runtime upgrade and rollback
+record](docs/RUNTIME_UPGRADE_0_20_41.md). Read that record before adopting it;
+subsequent runtime changes require fresh native acceptance. Windows native-host,
+full authentication, embedded-fallback and Install SOP gates remain unqualified.
 
 Create a virtual environment from the interpreter that already imports pcbnew.
 Using --system-site-packages is often needed for packaged Linux pcbnew; do not

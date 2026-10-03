@@ -25,13 +25,32 @@ versions, installed package origin, plugin loading and CLI help. Importing a
 plugin or printing help does not run `pcbnew` or certify KiCad host support.
 
 The bounded Windows test inventory did not find KiCad or its matching `pcbnew` interpreter.
-Native tests and real host MCP tests therefore remain a separate gate. The Linux
-KiCad 9.0.2/Python 3.13.5 evidence in [validation](validation.md) and
-[wire cancellation](wire-cancellation-validation.md) used Core/server 0.20.39 and
-must not be transferred to 0.20.41. No new operating system, KiCad version, or
-Python ABI qualification is claimed. The cloud native review must exercise actual
-board creation, reopen/readback, SVG, DRC, async schemas, cancellation and listener
-ownership with the new runtime and record exact versions and artifacts.
+Windows native tests and real host MCP tests therefore remain unqualified. The
+older Linux KiCad 9.0.2/Python 3.13.5 evidence in [validation](validation.md) and
+[wire cancellation](wire-cancellation-validation.md) used Core/server 0.20.39;
+it is historical and is not the evidence for the acceptance below.
+
+## Completed Linux acceptance on the reviewed baseline
+
+Separate Linux acceptance against exact commit
+`39cb7f9d4477162a583aa6665004eee6ab8f6346` used Core, server and operator CLI
+0.20.41. The source suite passed 54 tests, and the same 54 tests passed after a
+fresh wheel install; these are two runs of one suite, not 108 distinct tests.
+Lint, formatting, build, skill validation, all nine tools through the real MCP
+SDK, and native HTTP acceptance passed.
+
+The native-tested Linux wheel SHA-256 was
+`61d01681ebd4931bdb17fc4968c62d5019e4e20560bc9a7304ae275456e2b36b`.
+This identifies the Linux acceptance artifact, not a locally retained Windows
+wheel. The carrier reported zero DRC violations and 13 unconnected items; it
+remains a partial concept, not a complete circuit or fabrication deliverable.
+
+These completed results apply to that exact commit. The subsequent track-width
+failure-recovery change has host-independent regression coverage and requires
+fresh native source, installed-wheel, SDK and HTTP acceptance before the Linux
+results apply to the updated code. Windows native hosts, other operating systems,
+new KiCad versions or Python ABIs, full authentication, embedded fallback and
+Install SOP certification remain outside the recorded qualification.
 
 The sensor carrier remains a concept with partial routes and unconnected nets.
 Passing these runtime checks cannot establish complete circuit, ERC or fabrication
